@@ -15,10 +15,9 @@ class MessageBus {
         return [$eventName, $handlerId];
     }
 
-    public function notify(string $eventName, ...$params) {
-        $event = new BusEvent($eventName, $params);
+    public function fire(Event $event): array {
         return array_reduce(
-            $this->listners[$eventName] ?? [],
+            $this->listners[$event->getName()] ?? [],
             function(array $result, callable $handler) use ($event) : array {
                 if (!$event->isStopped()) {
                     $result[] = $handler($event);
@@ -28,6 +27,12 @@ class MessageBus {
             },
             []
         );
+
+    }
+
+    public function notify(string $eventName, ...$params) {
+        $event = new BusEvent($eventName, $params);
+        return $this->fire($event);
     }
 
     public function unsubscribe(array $subscription) {

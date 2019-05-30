@@ -88,4 +88,19 @@ class MessageBusTest extends TestCase {
         $this->assertEquals(['first'], $result);
     }
 
+    public function testFire() {
+        $bus = new MessageBus();
+
+        $testEvent = $this->prophesize(event::class);
+        $testEvent->getName()->willReturn('TEST_EVENT');
+        $testEvent->isStopped()->willReturn(false);
+
+        $bus->subscribe('TEST_EVENT', function(Event $event) use ($testEvent) {
+            $this->assertSame($testEvent->reveal(), $event);
+            return 'test';
+        });
+
+        $this->assertEquals(['test'], $bus->fire($testEvent->reveal()));
+    }
+
 }
