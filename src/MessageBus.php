@@ -20,7 +20,10 @@ class MessageBus {
         return array_reduce(
             $this->listners[$eventName] ?? [],
             function(array $result, callable $handler) use ($event) : array {
-                $result[] = $handler($event);
+                if (!$event->isStopped()) {
+                    $result[] = $handler($event);
+                }
+
                 return $result;
             },
             []

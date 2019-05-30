@@ -71,4 +71,21 @@ class MessageBusTest extends TestCase {
         $this->assertEquals(['something', 'something else'], $result);
     }
 
+    public function testStopPropagation() {
+        $bus = new MessageBus();
+
+        $bus->subscribe('TEST_EVENT', function(Event $event) {
+            $event->stopPropagation();
+            return 'first';
+        });
+
+        $bus->subscribe('TEST_EVENT', function(Event $event) {
+            return 'second';
+        });
+
+        $result = $bus->notify('TEST_EVENT');
+
+        $this->assertEquals(['first'], $result);
+    }
+
 }
