@@ -1,7 +1,6 @@
 <phpunit convertErrorsToExceptions="true"
 	convertNoticesToExceptions="true"
 	convertWarningsToExceptions="true"
-	syntaxCheck="true"
 	bootstrap="./vendor/autoload.php">
 
 	<testsuites>
