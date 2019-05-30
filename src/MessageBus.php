@@ -5,27 +5,29 @@ class MessageBus {
 
 	protected $listners = [];
 
-	public function subscribe(string $event, callable $handler) {
-		if (!isset($this->listners[$event])) {
-			$this->listners[$event] = [];
-		}
+    public function subscribe(string $eventName, callable $handler) {
+        if (!isset($this->listners[$eventName])) {
+            $this->listners[$eventName] = [];
+        }
 
-		$handlerId = count($this->listners[$event]);
-		$this->listners[$event][] = $handler;
-		return [$event, $handlerId];
-	}
+        $handlerId = count($this->listners[$eventName]);
+        $this->listners[$eventName][] = $handler;
+        return [$eventName, $handlerId];
+    }
 
-	public function notify(string $event, ...$params) {
-		if (!isset($this->listners[$event])) {
-			return;
-		}
+    public function notify(string $eventName, ...$params) {
+        $event = new BusEvent($eventName, $params);
+        return array_reduce(
+            $this->listners[$eventName] ?? [],
+            function(array $result, callable $handler) use ($event) : array {
+                $result[] = $handler($event);
+                return $result;
+            },
+            []
+        );
+    }
 
-		foreach ($this->listners[$event] as $handler) {
-			$handler(...$params);
-		}
-	}
-
-	public function unsubscribe(array $subscription) {
-		unset($this->listners[$subscription[0]][$subscription[1]]);
-	}
+    public function unsubscribe(array $subscription) {
+        unset($this->listners[$subscription[0]][$subscription[1]]);
+    }
 }

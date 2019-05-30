@@ -4,13 +4,18 @@ use PHPUnit\Framework\TestCase;
 
 class MessageBusTest extends TestCase {
 
+    public function testNullEvent() {
+		$bus = new MessageBus();
+		$this->assertEquals([], $bus->notify('TEST_EVENT'));
+    }
+
 	public function testSubscribe() {
 		$bus = new MessageBus();
 
 		$test = 'no';
 
-		$bus->subscribe('TEST_EVENT', function($param) use (&$test) {
-			$test = $param;
+		$bus->subscribe('TEST_EVENT', function(Event $event) use (&$test) {
+			$test = $event->getParams()[0];
 		});
 
 		$bus->notify('TEST_EVENT', 'yes');
@@ -25,8 +30,8 @@ class MessageBusTest extends TestCase {
 
 		$test = 'no';
 
-		$subscription = $bus->subscribe('TEST_EVENT', function($param) use (&$test) {
-			$test = $param;
+		$subscription = $bus->subscribe('TEST_EVENT', function(Event $event) use (&$test) {
+			$test = $event->getParams()[0];
 		});
 
 		$bus->notify('TEST_EVENT', 'yes');
@@ -37,5 +42,33 @@ class MessageBusTest extends TestCase {
 		$bus->notify('TEST_EVENT', 'old');
 		$this->assertSame('yes', $test);
 	}
+
+    public function testReturn() {
+        $bus = new MessageBus();
+
+        $bus->subscribe('TEST_EVENT', function() {
+            return 'something';
+        });
+
+        $result = $bus->notify('TEST_EVENT');
+
+        $this->assertEquals(['something'], $result);
+    }
+
+    public function testReturnMultiple() {
+        $bus = new MessageBus();
+
+        $bus->subscribe('TEST_EVENT', function() {
+            return 'something';
+        });
+
+        $bus->subscribe('TEST_EVENT', function() {
+            return 'something else';
+        });
+
+        $result = $bus->notify('TEST_EVENT');
+
+        $this->assertEquals(['something', 'something else'], $result);
+    }
 
 }
