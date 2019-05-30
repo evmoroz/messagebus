@@ -103,4 +103,18 @@ class MessageBusTest extends TestCase {
         $this->assertEquals(['test'], $bus->fire($testEvent->reveal()));
     }
 
+    public function testSubscribePattern() {
+        $bus = new MessageBus();
+
+        $closure = $this->getMockBuilder('TestCallable')
+                        ->disableOriginalClone()
+                        ->setMethods(['__invoke'])
+                        ->getMock();
+
+        $closure->expects($this->once())->method('__invoke');
+
+        $bus->subscribe('*.test', $closure);
+
+        $bus->notify('this.is.a.test');
+    }
 }

@@ -3,21 +3,21 @@ namespace MessageBus;
 
 class MessageBus {
 
-	protected $listners = [];
+	protected $listeners = [];
 
     public function subscribe(string $eventName, callable $handler) {
-        if (!isset($this->listners[$eventName])) {
-            $this->listners[$eventName] = [];
+        if (!isset($this->listeners[$eventName])) {
+            $this->listeners[$eventName] = [];
         }
 
-        $handlerId = count($this->listners[$eventName]);
-        $this->listners[$eventName][] = $handler;
+        $handlerId = count($this->listeners[$eventName]);
+        $this->listeners[$eventName][] = $handler;
         return [$eventName, $handlerId];
     }
 
     public function fire(Event $event): array {
         return array_reduce(
-            $this->listners[$event->getName()] ?? [],
+            $this->getListeners($event->getName()),
             function(array $result, callable $handler) use ($event) : array {
                 if (!$event->isStopped()) {
                     $result[] = $handler($event);
@@ -36,6 +36,22 @@ class MessageBus {
     }
 
     public function unsubscribe(array $subscription) {
-        unset($this->listners[$subscription[0]][$subscription[1]]);
+        unset($this->listeners[$subscription[0]][$subscription[1]]);
+    }
+
+    protected function getListeners(string $name): array {
+        $listeners = array_filter(
+            $this->listeners,
+            function($pattern) use ($name) {
+                return fnmatch($pattern, $name);
+            },
+            ARRAY_FILTER_USE_KEY
+        );
+
+        if (empty($listeners)) {
+            return [];
+        }
+
+        return array_merge(...array_values($listeners));
     }
 }
